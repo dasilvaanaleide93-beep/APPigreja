@@ -1,93 +1,175 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import json
-import os
+import json, os
 
 app = Flask(__name__)
 CORS(app)
 
-ARQUIVO = "pedidos.json"
+def carregar(arq):
+    if os.path.exists(arq):
+        try:
+            with open(arq, "r", encoding="utf-8") as f: return json.load(f)
+        except: return []
+    return []
+def salvar(arq, dados):
+    with open(arq, "w", encoding="utf-8") as f: json.dump(dados, f, ensure_ascii=False, indent=2)
 
-if os.path.exists(ARQUIVO):
-    try:
-        with open(ARQUIVO, "r", encoding="utf-8") as f:
-            pedidos_oracao = json.load(f)
-    except:
-        pedidos_oracao = []
-else:
-    pedidos_oracao = []
+oracoes = carregar("pedidos.json")
+recados = carregar("mural.json")
+voluntarios = carregar("voluntarios.json")
 
-def salvar():
-    with open(ARQUIVO, "w", encoding="utf-8") as f:
-        json.dump(pedidos_oracao, f, ensure_ascii=False, indent=2)
-
-HTML_BONITO = """
+HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>App Igreja - Pedidos de Oração</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paróquia Santa Terezinha</title>
 <style>
-body { font-family: Arial; background: #f0f2f5; margin:0; padding:20px; }
-.container { max-width:500px; margin:auto; background:white; padding:25px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-h1 { text-align:center; color:#2c3e50; }
-input, textarea { width:100%; padding:12px; margin:8px 0; border:1px solid #ddd; border-radius:8px; box-sizing:border-box; }
-button { width:100%; padding:13px; background:#27ae60; color:white; border:none; border-radius:8px; font-size:16px; font-weight:bold; }
-button:hover { background:#219150; }
-.pedido { background:#f9f9f9; padding:12px; margin-top:10px; border-left:4px solid #27ae60; border-radius:5px; }
-.nome { font-weight:bold; color:#2c3e50; }
+body{font-family:Arial;background:#f5f5f5;margin:0;padding:0}
+.card-top{max-width:480px;margin:15px auto;background:white;border-radius:15px;overflow:hidden;box-shadow:0 2px 10px #0001}
+.banner{width:100%;height:180px;object-fit:cover}
+.sec{padding:12px 15px;font-weight:bold;display:flex;justify-content:space-between;align-items:center}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:10px 15px}
+.item{text-align:center;background:#fdf8ef;padding:15px 5px;border-radius:12px}
+.item img{width:70px;height:70px;object-fit:contain}
+.item p{margin:8px 0 0;font-size:13px;color:#333;font-weight:500}
+.bloco{padding:10px 15px}
+.bloco2{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 15px}
+.pag{display:none;max-width:480px;margin:auto;padding:20px}
+.pag.ativa{display:block;background:white;min-height:100vh}
+.voltar{background:#8e44ad;color:white;border:none;padding:10px 15px;border-radius:20px;margin-bottom:15px}
+input,textarea{width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:8px;box-sizing:border-box}
+.btn{background:#8e44ad;color:white;border:none;padding:12px;width:100%;border-radius:8px;font-weight:bold}
+.card{ background:#f9f0ff; padding:12px; margin-top:10px; border-radius:8px; border-left:4px solid #8e44ad; }
 </style>
 </head>
 <body>
-<div class="container">
-<h1>🙏 Pedidos de Oração</h1>
-<p style="text-align:center; color:#666;">Igreja - Deixe seu pedido</p>
-<input id="nome" placeholder="Seu nome: Ana Leide...">
-<textarea id="pedido" placeholder="Seu pedido: minha familia..."></textarea>
-<button onclick="enviar()">Enviar Pedido 🙏</button>
-<div id="lista"></div>
+
+<div id="home">
+<div class="card-top">
+<img class="banner" src="https://i.imgur.com/8Km9tLL.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/2/2e/Th%C3%A9r%C3%A8se_de_Lisieux.jpg'">
+<div class="sec">Eventos e Atividades <span>></span></div>
+<div class="grid">
+<div class="item" onclick="abrir('doacoes')"><div style="font-size:50px">💝</div><p>Doações</p></div>
+<div class="item" onclick="abrir('oracao')"><div style="font-size:50px">🙏</div><p>Pedido de<br>Oração</p></div>
+<div class="item" onclick="abrir('liturgia')"><div style="font-size:50px">📖</div><p>Liturgia<br>Diária</p></div>
 </div>
+<div class="bloco">
+<p style="font-weight:bold;margin:0">Recados</p>
+<div class="item" style="width:90px;margin-top:10px" onclick="abrir('mural')"><div style="font-size:50px">✉️</div><p>Voluntários</p></div>
+</div>
+<div class="bloco">
+<p style="font-weight:bold;margin:0">Voluntários</p>
+<div class="item" style="width:90px;margin-top:10px" onclick="abrir('vol')"><div style="font-size:50px">👥</div><p></p></div>
+</div>
+</div>
+</div>
+
+<div id="oracao" class="pag">
+<button class="voltar" onclick="abrir('home')">← Voltar</button>
+<h2>🙏 Pedido de Oração</h2>
+<input id="nomeO" placeholder="Seu nome">
+<textarea id="pedO" placeholder="Escreva seu pedido..."></textarea>
+<button class="btn" onclick="enviarO()">Enviar Pedido</button>
+<div id="listaO"></div>
+</div>
+
+<div id="doacoes" class="pag">
+<button class="voltar" onclick="abrir('home')">← Voltar</button>
+<h2>💝 Doações</h2>
+<div style="background:#e8f5e9;padding:20px;border-radius:12px;text-align:center">
+<p>Ajude nossa Paróquia Santa Terezinha</p>
+<b>PIX:</b><br>Coloque aqui seu PIX<br><br>
+<b>Local:</b> Secretaria Paroquial<br>Barra do Garças - MT
+</div>
+</div>
+
+<div id="liturgia" class="pag">
+<button class="voltar" onclick="abrir('home')">← Voltar</button>
+<h2>📖 Liturgia Diária</h2>
+<p id="liturgiaTexto">Carregando liturgia de hoje...</p>
+</div>
+
+<div id="mural" class="pag">
+<button class="voltar" onclick="abrir('home')">← Voltar</button>
+<h2>📌 Mural de Recados</h2>
+<input id="nomeM" placeholder="Seu nome">
+<textarea id="msgM" placeholder="Deixe seu recado..."></textarea>
+<button class="btn" onclick="enviarM()">Postar</button>
+<div id="listaM"></div>
+</div>
+
+<div id="vol" class="pag">
+<button class="voltar" onclick="abrir('home')">← Voltar</button>
+<h2>👥 Voluntários</h2>
+<p>Quer ser voluntário na nossa paróquia? Cadastre-se!</p>
+<input id="nomeV" placeholder="Seu nome">
+<input id="zapV" placeholder="Seu WhatsApp">
+<textarea id="areaV" placeholder="Como quer ajudar? Catequese, Liturgia, Limpeza..."></textarea>
+<button class="btn" onclick="enviarV()">Quero ser Voluntário</button>
+<div id="listaV"></div>
+</div>
+
 <script>
-async function carregar(){
-  let r = await fetch('/oracao');
-  let d = await r.json();
-  let html = "<h3 style='margin-top:25px;'>Pedidos:</h3>";
-  d.oracoes.slice().reverse().forEach(p => {
-    html += `<div class='pedido'><div class='nome'>${p.nome || 'Anônimo'}</div><div>${p.pedido || ''}</div></div>`;
-  });
-  document.getElementById('lista').innerHTML = html;
+function abrir(id){
+ document.getElementById('home').style.display = id=='home' ? 'block' : 'none';
+ document.querySelectorAll('.pag').forEach(p=>p.classList.remove('ativa'));
+ if(id!='home') document.getElementById(id).classList.add('ativa');
+ if(id=='oracao') carregarO();
+ if(id=='mural') carregarM();
+ if(id=='vol') carregarV();
+ if(id=='liturgia') carregarLiturgia();
+ window.scrollTo(0,0);
 }
-async function enviar(){
-  let nome = document.getElementById('nome').value;
-  let pedido = document.getElementById('pedido').value;
-  if(!pedido){ alert('Escreva seu pedido!'); return; }
-  await fetch('/oracao', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({nome, pedido})});
-  document.getElementById('pedido').value='';
-  alert('Pedido enviado! Deus abençoe!');
-  carregar();
+async function carregarO(){ let r=await fetch('/oracao'); let d=await r.json(); let h=''; d.oracoes.slice().reverse().forEach(p=>{h+=`<div class='card'><b>${p.nome||'Anônimo'}</b><br>${p.pedido||''}</div>`}); document.getElementById('listaO').innerHTML=h; }
+async function enviarO(){ let nome=document.getElementById('nomeO').value; let pedido=document.getElementById('pedO').value; if(!pedido)return alert('Escreva!'); await fetch('/oracao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,pedido})}); document.getElementById('pedO').value=''; alert('Enviado!'); carregarO(); }
+async function carregarM(){ let r=await fetch('/mural'); let d=await r.json(); let h=''; d.mural.slice().reverse().forEach(p=>{h+=`<div class='card'><b>${p.nome||''}</b><br>${p.msg||''}</div>`}); document.getElementById('listaM').innerHTML=h; }
+async function enviarM(){ let nome=document.getElementById('nomeM').value; let msg=document.getElementById('msgM').value; if(!msg)return alert('Escreva!'); await fetch('/mural',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,msg})}); document.getElementById('msgM').value=''; alert('Postado!'); carregarM(); }
+async function carregarV(){ let r=await fetch('/voluntarios'); let d=await r.json(); let h='<h3>Voluntários cadastrados:</h3>'; d.voluntarios.slice().reverse().forEach(p=>{h+=`<div class='card'><b>${p.nome||''}</b> - ${p.zap||''}<br>${p.area||''}</div>`}); document.getElementById('listaV').innerHTML=h; }
+async function enviarV(){ let nome=document.getElementById('nomeV').value; let zap=document.getElementById('zapV').value; let area=document.getElementById('areaV').value; if(!nome)return alert('Nome!'); await fetch('/voluntarios',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,zap,area})}); alert('Obrigado! Deus abençoe!'); carregarV(); }
+async function carregarLiturgia(){
+ try{
+  let r=await fetch('https://liturgia.up.railway.app/');
+  let d=await r.json();
+  document.getElementById('liturgiaTexto').innerHTML = `<b>${d.liturgia||''}</b><br><br>${d.primeiraLeitura||''}<br><br>${d.salmo||''}<br><br>${d.evangelho||''}`;
+ } catch(e){
+  document.getElementById('liturgiaTexto').innerHTML = "Evangelho de hoje:<br><br>Deus amou tanto o mundo que deu seu Filho único, para que todo o que nele crer não pereça, mas tenha a vida eterna. (Jo 3,16)<br><br>Que Santa Terezinha interceda por nós!";
+ }
 }
-carregar();
 </script>
 </body>
 </html>
 """
 
-@app.route('/', methods=['GET'])
-def inicio():
-    return HTML_BONITO
+@app.route('/')
+def home(): return HTML
 
-@app.route('/oracao', methods=['GET', 'POST'])
+@app.route('/oracao', methods=['GET','POST'])
 def oracao():
-    global pedidos_oracao
-    if request.method == 'POST':
-        dados = request.get_json()
-        if dados:
-            pedidos_oracao.append(dados)
-            salvar()
-        return jsonify({"mensagem": "Recebido! Deus abencoe!"})
-    return jsonify({"oracoes": pedidos_oracao})
+    global oracoes
+    if request.method=='POST':
+        d=request.get_json()
+        if d: oracoes.append(d); salvar("pedidos.json", oracoes)
+        return jsonify({"ok":True})
+    return jsonify({"oracoes":oracoes})
 
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
+@app.route('/mural', methods=['GET','POST'])
+def mural():
+    global recados
+    if request.method=='POST':
+        d=request.get_json()
+        if d: recados.append(d); salvar("mural.json", recados)
+        return jsonify({"ok":True})
+    return jsonify({"mural":recados})
+
+@app.route('/voluntarios', methods=['GET','POST'])
+def vol():
+    global voluntarios
+    if request.method=='POST':
+        d=request.get_json()
+        if d: voluntarios.append(d); salvar("voluntarios.json", voluntarios)
+        return jsonify({"ok":True})
+    return jsonify({"voluntarios":voluntarios})
+
+if __name__=='__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT",10000)))
