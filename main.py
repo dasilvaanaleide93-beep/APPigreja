@@ -23,7 +23,7 @@ def home():
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 body{margin:0;font-family:Arial;background:#fff7f8}
-.banner{width:100%;height:auto;display:block;object-fit:contain;background:#fff}
+.banner{width:100%;height:230px;display:block;object-fit:cover;object-position:top center;background:#fff}
 .menu{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:15px}
 .btn{width:110px;background:white;border-radius:12px;padding:10px;text-align:center;box-shadow:0 2px 6px #0002;cursor:pointer}
 .pag{display:none;padding:15px}.ativa{display:block}
