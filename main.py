@@ -10,7 +10,7 @@ HTML = """
 <title>Paróquia Santa Teresinha</title>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#fef8f0;color:#333}
-.banner{width:100%;height:280px;display:block;object-fit:cover;object-position:center 22%;background:#fff}
+.banner{width:100%;height:400px;display:block;object-fit:cover;object-position:center 22%;background:#fff}
 #home{padding:15px;text-align:center}
 .icones{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
 .icone{background:white;border-radius:12px;padding:15px 5px;box-shadow:0 2px 5px rgba(0,0,0,0.15);cursor:pointer}
