@@ -120,6 +120,22 @@ p{font-size:14px;color:#555}
 .secao h4{color:#8B0000;margin-bottom:5px;font-size:16px}
 .badge-cor{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:bold;background:#e0e0e0}
 .btn-reload{background:#8B0000;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;margin-top:10px}
+
+/* Estilo do Carregando */
+.loader-container { text-align: center; padding: 30px 10px; }
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #8B0000;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 12px auto;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
@@ -141,7 +157,7 @@ p{font-size:14px;color:#555}
 <div id="liturgia" class="pag">
   <div class="topo"><button onclick="abrir('home')">← Voltar ao Início</button></div>
   <h3>Liturgia Diária 📖 <span id="dataLiturgia"></span></h3>
-  <div id="conteudoLiturgia">Carregando liturgia...</div>
+  <div id="conteudoLiturgia"></div>
 </div>
 
 <div id="doacoes" class="pag"><div class="topo"><button onclick="abrir('home')">← Voltar ao Início</button></div><h3>Doações ❤️</h3></div>
@@ -159,6 +175,15 @@ function abrir(id){
 
 async function carregarLiturgia(){
   const el = document.getElementById('conteudoLiturgia');
+
+  // Exibe a animação do spinner enquanto busca a resposta da API
+  el.innerHTML = `
+    <div class="loader-container">
+      <div class="spinner"></div>
+      <p style="color:#666; font-size:14px;">Buscando as leituras de hoje...<br><small>(O primeiro acesso pode demorar alguns segundos)</small></p>
+    </div>
+  `;
+
   try {
     const res = await fetch('/api/liturgia?t=' + new Date().getTime());
     const data = await res.json();
@@ -188,7 +213,7 @@ async function carregarLiturgia(){
 
     el.innerHTML = html;
   } catch(e) {
-    el.innerHTML = '<p style="color:red">Erro ao carregar a liturgia: ' + e + '</p><button class="btn-reload" onclick="carregarLiturgia()">Tentar Novamente</button>';
+    el.innerHTML = '<p style="color:red">Erro ao carregar a liturgia. Tente novamente.</p><button class="btn-reload" onclick="carregarLiturgia()">Tentar Novamente</button>';
   }
 }
 </script>
