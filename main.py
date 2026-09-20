@@ -167,7 +167,7 @@ carregarLiturgia();
 
 @app.route("/")
 def index():
-    return HTML
+    return render_template("index.html")
 
 
 @app.route("/api/liturgia")
