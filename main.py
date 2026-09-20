@@ -118,7 +118,6 @@ body { margin:0; font-family: Arial, sans-serif; background:#fef8f0; padding:15p
 <body>
 <div class="card">
 <a href='/'>voltar</a>
-</button>
 
   <h2>Liturgia <span id="dataHoje"></span></h2>
   <div id="conteudoLiturgia">Carregando liturgia...</div>
