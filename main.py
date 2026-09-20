@@ -117,7 +117,7 @@ body { margin:0; font-family: Arial, sans-serif; background:#fef8f0; padding:15p
 </head>
 <body>
 <div class="card">
-  <button onclick="window.location.href='/'" style="background:#880000;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer">← Voltar</button>
+  <button onclick="window.history.back()" style="background:#880000;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer">← Voltar</button>
   <h2>Liturgia <span id="dataHoje"></span></h2>
   <div id="conteudoLiturgia">Carregando liturgia...</div>
 </div>
