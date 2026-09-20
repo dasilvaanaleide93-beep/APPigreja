@@ -1,4 +1,4 @@
-from flask import Flask, jsonify,render_template
+from flask import Flask, jsonify, render_template, render_template_string
 import requests
 from datetime import datetime
 
@@ -87,7 +87,7 @@ def buscar_liturgia():
         except Exception:
             continue
 
-    # Caso a API externa esteja fora do ar, exibe aviso amigável com o link oficial
+    # Caso a API externa esteja fora do ar, exibe aviso amigável
     return {
         "liturgia": "Liturgia Diária",
         "cor": "Verde",
@@ -100,7 +100,7 @@ def buscar_liturgia():
     }
 
 
-HTML = """
+HTML_LITURGIA = """
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -113,11 +113,12 @@ body { margin:0; font-family: Arial, sans-serif; background:#fef8f0; padding:15p
 .secao { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
 .secao h3 { color: #880000; margin-bottom: 5px; }
 .badge-cor { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #e0e0e0; }
+.btn-voltar { display: inline-block; background: #880000; color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
 </style>
 </head>
 <body>
 <div class="card">
-<a href='{{url_for('index')}}'>voltar</a>
+  <a href="/" class="btn-voltar">← Voltar</a>
 
   <h2>Liturgia <span id="dataHoje"></span></h2>
   <div id="conteudoLiturgia">Carregando liturgia...</div>
@@ -169,21 +170,18 @@ carregarLiturgia();
 def index():
     return render_template("index.html")
 
-import requests
 
-def buscar_liturgia():
-    try:
-        resposta = requests.get("https://liturgia.up.railway.app/")
-        if resposta.status_code == 200:
-            return resposta.json()
-        return {"erro": "Não foi possível carregar a liturgia."}
-    except Exception as e:
-        return {"erro": str(e)}
+@app.route("/liturgia")
+def pagina_liturgia():
+    # Renderiza o HTML da liturgia com o botão voltar apontando para a página inicial
+    return render_template_string(HTML_LITURGIA)
+
 
 @app.route("/api/liturgia")
 def api_liturgia():
+    # Endpoint retornado via JSON para o fetch do JavaScript
     return jsonify(buscar_liturgia())
 
 
 if __name__ == "__main__":
-    app.run(host = '0.0.0.0', port = 10000)
+    app.run(host='0.0.0.0', port=10000)

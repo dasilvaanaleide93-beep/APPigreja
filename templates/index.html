@@ -1,33 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <title>Liturgia</title>
 </head>
 <body>
-    <h1>Liturgia</h1>
+    <button onclick="window.location.href='/'" style="background:#880000;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer">
+      ← Voltar
+    </button>
+
+    <h1>Liturgia Diária</h1>
     <div id="conteudoLiturgia">Carregando liturgia...</div>
 
     <script>
         async function carregarLiturgia() {
             try {
                 const response = await fetch('/api/liturgia');
+
+                if (!response.ok) {
+                    throw new Error('Erro na requisição');
+                }
+
+                // 1. Converte a resposta em dados JSON
                 const data = await response.json();
-                document.getElementById('conteudoLiturgia').innerText = JSON.stringify(data);
+
+                // 2. Exibe os dados formatados na tela
+                if (data.erro) {
+                    document.getElementById('conteudoLiturgia').innerText = data.erro;
+                } else {
+                    document.getElementById('conteudoLiturgia').innerText = JSON.stringify(data, null, 2);
+                }
+
             } catch (error) {
-                document.getElementById('conteudoLiturgia').innerText = 'Erro ao carregar.';
+                console.error(error);
+                document.getElementById('conteudoLiturgia').innerText = 'Erro ao carregar a liturgia.';
             }
         }
+
         carregarLiturgia();
     </script>
-</body>
-</html>
 </body>
 </html>
