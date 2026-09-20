@@ -169,6 +169,16 @@ carregarLiturgia();
 def index():
     return render_template("index.html")
 
+import requests
+
+def buscar_liturgia():
+    try:
+        resposta = requests.get("https://liturgia.up.railway.app/")
+        if resposta.status_code == 200:
+            return resposta.json()
+        return {"erro": "Não foi possível carregar a liturgia."}
+    except Exception as e:
+        return {"erro": str(e)}
 
 @app.route("/api/liturgia")
 def api_liturgia():

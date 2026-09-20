@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Liturgia</title>
+</head>
+<body>
+    <h1>Liturgia</h1>
+    <div id="conteudoLiturgia">Carregando liturgia...</div>
+
+    <script>
+        async function carregarLiturgia() {
+            try {
+                const response = await fetch('/api/liturgia');
+                const data = await response.json();
+                document.getElementById('conteudoLiturgia').innerText = JSON.stringify(data);
+            } catch (error) {
+                document.getElementById('conteudoLiturgia').innerText = 'Erro ao carregar.';
+            }
+        }
+        carregarLiturgia();
+    </script>
+</body>
+</html>
+</body>
+</html>
