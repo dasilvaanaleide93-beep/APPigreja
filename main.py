@@ -117,7 +117,7 @@ body { margin:0; font-family: Arial, sans-serif; background:#fef8f0; padding:15p
 </head>
 <body>
 <div class="card">
-<a href='/'>voltar</a>
+<a href='{{url_for('index')}}'>voltar</a>
 
   <h2>Liturgia <span id="dataHoje"></span></h2>
   <div id="conteudoLiturgia">Carregando liturgia...</div>
