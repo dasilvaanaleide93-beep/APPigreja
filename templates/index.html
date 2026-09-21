@@ -1,43 +1,187 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Liturgia</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liturgia Diária - Paróquia Santa Teresinha</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #f4f6f8;
+    color: #333;
+    padding: 15px;
+  }
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  .btn-voltar {
+    display: inline-block;
+    background: #880000;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    transition: background 0.2s;
+  }
+  .btn-voltar:hover {
+    background: #660000;
+  }
+  .header-liturgia {
+    border-bottom: 2px solid #880000;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+  .header-liturgia h1 {
+    margin: 0 0 8px 0;
+    color: #880000;
+    font-size: 24px;
+  }
+  .badge-cor {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  .secao {
+    margin-bottom: 25px;
+    background: #fafafa;
+    border-left: 4px solid #880000;
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+  }
+  .secao h3 {
+    color: #880000;
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 18px;
+  }
+  .texto-leitura {
+    line-height: 1.7;
+    font-size: 15px;
+    text-align: justify;
+  }
+  .refrao {
+    background: #fff3e0;
+    padding: 10px;
+    border-radius: 6px;
+    color: #e65100;
+    margin-bottom: 12px;
+  }
+  .btn-oficial {
+    display: block;
+    text-align: center;
+    background: #880000;
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-top: 25px;
+  }
+</style>
 </head>
 <body>
-    <button onclick="window.location.href='/'" style="background:#880000;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer">
-      ← Voltar
-    </button>
 
-    <h1>Liturgia Diária</h1>
-    <div id="conteudoLiturgia">Carregando liturgia...</div>
+<div class="container">
+  <div class="card">
+    <a href="/" class="btn-voltar">← Voltar</a>
 
-    <script>
-        async function carregarLiturgia() {
-            try {
-                const response = await fetch('/api/liturgia');
+    <div id="conteudoLiturgia">
+      <p style="text-align:center; color:#666;">Carregando a liturgia do dia...</p>
+    </div>
+  </div>
+</div>
 
-                if (!response.ok) {
-                    throw new Error('Erro na requisição');
-                }
+<script>
+async function carregarLiturgia() {
+  const container = document.getElementById('conteudoLiturgia');
 
-                // 1. Converte a resposta em dados JSON
-                const data = await response.json();
+  try {
+    const response = await fetch('/api/liturgia');
+    const data = await response.json();
 
-                // 2. Exibe os dados formatados na tela
-                if (data.erro) {
-                    document.getElementById('conteudoLiturgia').innerText = data.erro;
-                } else {
-                    document.getElementById('conteudoLiturgia').innerText = JSON.stringify(data, null, 2);
-                }
+    let html = `
+      <div class="header-liturgia">
+        <h1>${data.liturgia || 'Liturgia Diária'}</h1>
+        <small style="color:#666; font-weight:bold;">Data: ${data.data}</small><br><br>
+        <span class="badge-cor">Cor Litúrgica: ${data.cor || 'Verde'}</span>
+      </div>
+    `;
 
-            } catch (error) {
-                console.error(error);
-                document.getElementById('conteudoLiturgia').innerText = 'Erro ao carregar a liturgia.';
-            }
-        }
+    if (data.primeiraLeitura) {
+      html += `
+        <div class="secao">
+          <h3>📖 Primeira Leitura</h3>
+          <div class="texto-leitura">${data.primeiraLeitura}</div>
+        </div>
+      `;
+    }
 
-        carregarLiturgia();
-    </script>
+    if (data.salmo) {
+      html += `
+        <div class="secao">
+          <h3>🎵 Salmo Responsorial</h3>
+          <div class="texto-leitura">${data.salmo}</div>
+        </div>
+      `;
+    }
+
+    if (data.segundaLeitura) {
+      html += `
+        <div class="secao">
+          <h3>📖 Segunda Leitura</h3>
+          <div class="texto-leitura">${data.segundaLeitura}</div>
+        </div>
+      `;
+    }
+
+    if (data.evangelho) {
+      html += `
+        <div class="secao">
+          <h3>✝️ Evangelho</h3>
+          <div class="texto-leitura">${data.evangelho}</div>
+        </div>
+      `;
+    }
+
+    if (data.link) {
+      html += `
+        <a href="${data.link}" target="_blank" class="btn-oficial">
+          Ver liturgia completa no site oficial
+        </a>
+      `;
+    }
+
+    container.innerHTML = html;
+
+  } catch (error) {
+    console.error('Erro:', error);
+    container.innerHTML = `
+      <p style="color: red; text-align: center;">
+        Não foi possível carregar a liturgia formatada.<br><br>
+        <a href="https://liturgia.cancaonova.com/" target="_blank" style="color: #880000; font-weight: bold;">
+          Acesse a liturgia no portal oficial
+        </a>
+      </p>
+    `;
+  }
+}
+
+carregarLiturgia();
+</script>
+
 </body>
 </html>
