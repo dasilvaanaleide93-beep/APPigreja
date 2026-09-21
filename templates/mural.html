@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mural</title>
+<style>
+body{font-family:Arial;background:#f4f6f8;padding:20px;max-width:600px;margin:auto}
+.caixa{background:white;padding:15px;border-radius:10px;margin-bottom:15px}
+input,textarea{width:95%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #ccc}
+button{background:#2c5aa0;color:white;padding:12px;width:100%;border:none;border-radius:8px;font-size:16px}
+</style>
+</head>
+<body>
+<a href="/">← Voltar</a>
+<h2>💬 Mural de Recados</h2>
+<form method="post" action="/mural">
+<input type="text" name="nome" placeholder="Seu nome" required><br>
+<textarea name="mensagem" placeholder="Seu recado..." required></textarea><br>
+<button type="submit">Enviar</button>
+</form>
+<hr>
+{% for r in recados %}
+<div class="caixa"><b>{{ r.nome }}</b>: {{ r.mensagem }}</div>
+{% endfor %}
+</body>
+</html>
