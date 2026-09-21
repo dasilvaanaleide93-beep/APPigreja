@@ -19,20 +19,23 @@ init_db()
 def home():
     return render_template('index.html')
 
-@app.route('/mural')
-@app.route('/mural/novo')
-@app.route('/mu')
+# ESSA PARTE AQUI ARRUMA SEU ERRO
+@app.route('/mural', methods=['GET'])
+@app.route('/mural/novo', methods=['GET'])
 def mural_page():
     return render_template('mural.html')
 
-@app.route('/api/mural', methods=['GET','POST'])
+@app.route('/api/mural', methods=['GET', 'POST'])
 def api_mural():
     conn = sqlite3.connect(DB)
     c = conn.cursor()
     if request.method == 'POST':
-        d = request.get_json()
-        c.execute("INSERT INTO recados (nome, mensagem) VALUES (?,?)", (d.get('nome','Anônimo'), d.get('mensagem','')))
-        conn.commit()
+        d = request.get_json(silent=True) or request.form
+        nome = d.get('nome','Anônimo')
+        mensagem = d.get('mensagem','')
+        if mensagem:
+            c.execute("INSERT INTO recados (nome, mensagem) VALUES (?,?)", (nome, mensagem))
+            conn.commit()
         conn.close()
         return jsonify({"status":"ok"})
     else:
