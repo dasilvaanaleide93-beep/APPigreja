@@ -1,11 +1,10 @@
-from flask import Flask, jsonify, render_template, render_template_string
+from flask import Flask, jsonify, render_template
 import requests
 from datetime import datetime
 
 app = Flask(__name__)
 
 
-# Habilita cabeçalho de CORS manualmente para evitar bloqueio no navegador
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -27,7 +26,6 @@ def formatar_leitura(item):
 
 
 def buscar_liturgia():
-    # Tenta obter dados da API (versão v2/v3)
     urls = [
         "https://liturgia.up.railway.app/",
         "https://liturgia.up.railway.app/v2/",
@@ -46,7 +44,6 @@ def buscar_liturgia():
                 salmo = ""
                 evangelho = ""
 
-                # Formato com array 'leituras'
                 leituras = dados.get("leituras", []) if isinstance(dados, dict) else []
                 for item in leituras:
                     tipo = str(item.get("tipo", "")).lower()
@@ -62,7 +59,6 @@ def buscar_liturgia():
                     elif "evangelho" in tipo or "evangelho" in titulo:
                         evangelho = conteudo
 
-                # Formato chave-valor simples
                 if isinstance(dados, dict):
                     if not p_leitura and "primeiraLeitura" in dados:
                         p_leitura = formatar_leitura(dados.get("primeiraLeitura"))
@@ -87,7 +83,6 @@ def buscar_liturgia():
         except Exception:
             continue
 
-    # Caso a API externa esteja fora do ar, exibe aviso amigável
     return {
         "liturgia": "Liturgia Diária",
         "cor": "Verde",
@@ -100,72 +95,6 @@ def buscar_liturgia():
     }
 
 
-HTML_LITURGIA = """
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Paróquia Santa Teresinha</title>
-<style>
-body { margin:0; font-family: Arial, sans-serif; background:#fef8f0; padding:15px; }
-.card { background:white; border-radius:12px; padding:20px; max-width:600px; margin:10px auto; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-.secao { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-.secao h3 { color: #880000; margin-bottom: 5px; }
-.badge-cor { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #e0e0e0; }
-.btn-voltar { display: inline-block; background: #880000; color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
-</style>
-</head>
-<body>
-<div class="card">
-  <a href="/" class="btn-voltar">← Voltar</a>
-
-  <h2>Liturgia <span id="dataHoje"></span></h2>
-  <div id="conteudoLiturgia">Carregando liturgia...</div>
-</div>
-
-<script>
-async function carregarLiturgia(){
-  const el = document.getElementById('conteudoLiturgia');
-  try {
-    const res = await fetch('/api/liturgia');
-    const data = await res.json();
-
-    document.getElementById('dataHoje').innerText = data.data ? '- ' + data.data : '';
-
-    let html = '<p><b>' + (data.liturgia || 'Liturgia do Dia') + '</b> <span class="badge-cor">Cor: ' + (data.cor || 'Verde') + '</span></p><hr>';
-
-    if (data.primeiraLeitura) {
-      html += '<div class="secao"><h3>📖 1ª Leitura</h3><p>' + data.primeiraLeitura + '</p></div>';
-    }
-
-    if (data.salmo) {
-      html += '<div class="secao"><h3>🎵 Salmo Responsorial</h3><p>' + data.salmo + '</p></div>';
-    }
-
-    if (data.segundaLeitura) {
-      html += '<div class="secao"><h3>📖 2ª Leitura</h3><p>' + data.segundaLeitura + '</p></div>';
-    }
-
-    if (data.evangelho) {
-      html += '<div class="secao"><h3>✝️ Evangelho</h3><p>' + data.evangelho + '</p></div>';
-    }
-
-    html += '<p style="text-align:center; margin-top:20px;"><a href="' + data.link + '" target="_blank" style="background:#880000; color:white; text-decoration:none; padding:10px 15px; border-radius:6px; display:inline-block;">Ver no site oficial da Canção Nova</a></p>';
-
-    el.innerHTML = html;
-  } catch(e) {
-    el.innerHTML = '<p style="color:red; text-align:center;">Não foi possível carregar o conteúdo. <br><br><a href="https://liturgia.cancaonova.com/" target="_blank" style="color:#880000;">Clique aqui para abrir no site oficial</a></p>';
-  }
-}
-
-carregarLiturgia();
-</script>
-</body>
-</html>
-"""
-
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -173,13 +102,11 @@ def index():
 
 @app.route("/liturgia")
 def pagina_liturgia():
-    # Renderiza o HTML da liturgia com o botão voltar apontando para a página inicial
-    return render_template_string(HTML_LITURGIA)
+    return render_template("liturgia.html")
 
 
 @app.route("/api/liturgia")
 def api_liturgia():
-    # Endpoint retornado via JSON para o fetch do JavaScript
     return jsonify(buscar_liturgia())
 
 
