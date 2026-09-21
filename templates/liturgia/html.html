@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liturgia Diária - Paróquia Santa Teresinha</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #fef8f0; padding: 15px; }
+    .card { background: white; border-radius: 12px; padding: 20px; max-width: 600px; margin: 10px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .secao { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+    .secao h3 { color: #880000; margin-bottom: 5px; }
+    .badge-cor { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #e0e0e0; }
+    .btn-voltar { display: inline-block; background: #880000; color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- O Jinja2 do Flask direciona este link de volta para a rota 'index' -->
+    <a href="{{ url_for('index') }}" class="btn-voltar">← Voltar</a>
+
+    <h2>Liturgia <span id="dataHoje"></span></h2>
+    <div id="conteudoLiturgia">Carregando liturgia...</div>
+  </div>
+
+  <script>
+    async function carregarLiturgia() {
+      const el = document.getElementById('conteudoLiturgia');
+      try {
+        const res = await fetch('/api/liturgia');
+        const data = await res.json();
+
+        document.getElementById('dataHoje').innerText = data.data ? '- ' + data.data : '';
+
+        let html = '<p><b>' + (data.liturgia || 'Liturgia do Dia') + '</b> <span class="badge-cor">Cor: ' + (data.cor || 'Verde') + '</span></p><hr>';
+
+        if (data.primeiraLeitura) {
+          html += '<div class="secao"><h3>📖 1ª Leitura</h3><p>' + data.primeiraLeitura + '</p></div>';
+        }
+
+        if (data.salmo) {
+          html += '<div class="secao"><h3>🎵 Salmo Responsorial</h3><p>' + data.salmo + '</p></div>';
+        }
+
+        if (data.segundaLeitura) {
+          html += '<div class="secao"><h3>📖 2ª Leitura</h3><p>' + data.segundaLeitura + '</p></div>';
+        }
+
+        if (data.evangelho) {
+          html += '<div class="secao"><h3>✝️ Evangelho</h3><p>' + data.evangelho + '</p></div>';
+        }
+
+        html += '<p style="text-align:center; margin-top:20px;"><a href="' + data.link + '" target="_blank" style="background:#880000; color:white; text-decoration:none; padding:10px 15px; border-radius:6px; display:inline-block;">Ver no site oficial da Canção Nova</a></p>';
+
+        el.innerHTML = html;
+      } catch(e) {
+        el.innerHTML = '<p style="color:red; text-align:center;">Não foi possível carregar o conteúdo.<br><br><a href="https://liturgia.cancaonova.com/" target="_blank" style="color:#880000;">Clique aqui para abrir no site oficial</a></p>';
+      }
+    }
+
+    carregarLiturgia();
+  </script>
+</body>
+</html>
