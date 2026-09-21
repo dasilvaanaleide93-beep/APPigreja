@@ -1,16 +1,22 @@
 import os
 import sqlite3
-from flask import Flask, render_template, request, redirect
+import json
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
+import requests
 
 app = Flask(__name__)
+CORS(app)
 
-# Cria o banco se não existir
+DB = "mural.db"
+
 def init_db():
-    conn = sqlite3.connect('mural.db')
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS pedidos 
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                  nome TEXT, texto TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS recados
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  nome TEXT,
+                  mensagem TEXT)''')
     conn.commit()
     conn.close()
 
@@ -18,32 +24,40 @@ init_db()
 
 @app.route('/')
 def home():
-    return redirect('/mural')
+    return render_template('index.html')
 
 @app.route('/mural')
-def mural():
-    conn = sqlite3.connect('mural.db')
+def mural_page():
+    return render_template('mural.html')
+
+@app.route('/api/mural', methods=['GET', 'POST'])
+def api_mural():
+    conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('SELECT nome, texto FROM pedidos ORDER BY id DESC')
-    pedidos = c.fetchall()
-    conn.close()
-    return render_template('mural.html', pedidos=pedidos)
-
-@app.route('/enviar', methods=['POST'])
-def enviar():
-    login = request.form.get('login', '')
-    senha = request.form.get('senha', '')
-    texto = request.form.get('texto', '')
-    
-    # Senha simples que você já usava
-    if senha == '1234' or senha == 'paroquia':
-        nome = login if login else 'Anônimo'
-        conn = sqlite3.connect('mural.db')
-        c = conn.cursor()
-        c.execute('INSERT INTO pedidos (nome, texto) VALUES (?, ?)', (nome, texto))
-        conn.commit()
+    if request.method == 'POST':
+        data = request.get_json()
+        nome = data.get('nome', 'Anônimo')
+        mensagem = data.get('mensagem', '')
+        if mensagem:
+            c.execute("INSERT INTO recados (nome, mensagem) VALUES (?,?)", (nome, mensagem))
+            conn.commit()
         conn.close()
-    
-    return redirect('/mural')
+        return jsonify({"status": "ok"})
+    else:
+        c.execute("SELECT nome, mensagem FROM recados ORDER BY id DESC")
+        recados = [{"nome": r[0], "mensagem": r[1]} for r in c.fetchall()]
+        conn.close()
+        return jsonify(recados)
 
-# NÃO coloca app.run aqui, o Render usa o gunicorn
+@app.route('/pedidos')
+def pedidos():
+    try:
+        with open('pedidos.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except:
+        data = []
+    return jsonify(data)
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
