@@ -3,22 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paróquia Santa Terezinha</title>
+<title>Paroquia Santa Terezinha</title>
 <style>
- body { margin:0; font-family: Arial; background: #f4f6f8; text-align:center; padding: 20px; }
- .container { max-width: 600px; margin: 50px auto; }
- .card { background: white; border-radius: 15px; padding: 30px; }
- .botao { display: block; background: #2c5aa0; color: white; padding: 15px; margin: 15px 0; text-decoration: none; border-radius: 10px; font-size: 18px; }
+body{margin:0;font-family:Arial;background:#f4f6f8;text-align:center}
+.topo{background:white;padding:20px}
+.topo img{width:120px;border-radius:50%}
+.container{max-width:600px;margin:20px auto;padding:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.card{background:white;border-radius:15px;padding:20px;text-decoration:none;color:#333}
+.card span{font-size:30px;display:block}
+.grande{grid-column:span 2;background:#2c5aa0;color:white;font-size:18px}
 </style>
 </head>
 <body>
+<div class="topo">
+<img src="/static/santa.webp">
+<h1>Paroquia Santa Terezinha</h1>
+<p>Bem-vinda!</p>
+</div>
 <div class="container">
-  <div class="card">
-    <h1>Paróquia Santa Terezinha</h1>
-    <p>Bem-vindo!</p>
-    <a class="botao" href="/liturgia">📖 Liturgia Diária</a>
-    <a class="botao" href="/liturgia" style="background:#4CAF50">🙏 Fazer Pedido de Oração</a>
-  </div>
+<div class="grid">
+<a class="card grande" href="/liturgia"><span>📖</span>Liturgia Diaria</a>
+<a class="card" href="/pedidos"><span>🙏</span>Oracao</a>
+<a class="card" href="/mural"><span>💬</span>Mural</a>
+<a class="card" href="/doacoes"><span>❤️</span>Doacoes</a>
+<a class="card" href="/avisos"><span>📢</span>Avisos</a>
+</div>
 </div>
 </body>
 </html>
