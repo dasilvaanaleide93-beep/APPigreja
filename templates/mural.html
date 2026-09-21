@@ -1,27 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mural</title>
+<title>Mural - Paróquia Santa Terezinha</title>
 <style>
-body{font-family:Arial;background:#f4f6f8;padding:20px;max-width:600px;margin:auto}
-.caixa{background:white;padding:15px;border-radius:10px;margin-bottom:15px}
-input,textarea{width:95%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #ccc}
-button{background:#2c5aa0;color:white;padding:12px;width:100%;border:none;border-radius:8px;font-size:16px}
+body{margin:0;font-family:Arial;background:#f4f6f8;padding:15px}
+.caixa{max-width:600px;margin:0 auto}
+.msg{background:white;padding:12px;margin:10px 0;border-radius:10px;text-align:left}
+form{background:white;padding:15px;border-radius:15px;margin-top:20px}
+input{width:90%;padding:10px;margin:5px;border:1px solid #ccc;border-radius:8px}
+button{background:#2c5aa0;color:white;padding:12px 20px;border:none;border-radius:8px;margin-top:10px;width:100%}
+a{color:#2c5aa0}
 </style>
 </head>
 <body>
-<a href="/">← Voltar</a>
+<div class="caixa">
+<a href="/">⬅ Voltar</a>
 <h2>💬 Mural de Recados</h2>
-<form method="post" action="/mural">
-<input type="text" name="nome" placeholder="Seu nome" required><br>
-<textarea name="mensagem" placeholder="Seu recado..." required></textarea><br>
-<button type="submit">Enviar</button>
-</form>
-<hr>
-{% for r in recados %}
-<div class="caixa"><b>{{ r.nome }}</b>: {{ r.mensagem }}</div>
+
+{% for m in mensagens %}
+<div class="msg">
+<b>{{ m.autor }}:</b> {{ m.texto }}
+</div>
+{% else %}
+<p>Nenhum recado ainda.</p>
 {% endfor %}
+
+<form action="/mural/novo" method="POST">
+<h3>Postar (só coordenação)</h3>
+<input name="login" placeholder="Seu login: padre, elisangela ou ana" required>
+<input name="texto" placeholder="Escreva o recado" required>
+<input name="senha" type="password" placeholder="Sua senha" required>
+<button type="submit">Postar para todos</button>
+</form>
+</div>
 </body>
 </html>
