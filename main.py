@@ -1,16 +1,17 @@
 from datetime import datetime
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request, redirect
 import requests
 
 app = Flask(__name__)
 
+# Lista do mural - guarda os recados
+recados_mural = []
 
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
-
 
 def formatar_leitura(item):
     if not isinstance(item, dict):
@@ -20,13 +21,10 @@ def formatar_leitura(item):
     refrao = item.get("refrao") or ""
     refrao_str = f"<p class='refrao'><b>Refrão:</b> <i>{refrao}</i></p>" if refrao else ""
     texto = item.get("texto") or item.get("leitura") or ""
-
     if texto:
-        # Converte quebras de linha em parágrafos organizados
         texto_formatado = texto.replace("\n", "<br>")
         return f"{ref_str}{refrao_str}<div class='texto-leitura'>{texto_formatado}</div>"
     return ""
-
 
 def buscar_liturgia():
     urls = [
@@ -34,25 +32,21 @@ def buscar_liturgia():
         "https://liturgia.up.railway.app/v2/",
         "https://liturgia.up.railway.app/v3/"
     ]
-
     for url in urls:
         try:
             r = requests.get(url, timeout=5)
             if r.status_code == 200:
                 j = r.json()
                 dados = j[0] if isinstance(j, list) and len(j) > 0 else j
-
                 p_leitura = ""
                 s_leitura = ""
                 salmo = ""
                 evangelho = ""
-
                 leituras = dados.get("leituras", []) if isinstance(dados, dict) else []
                 for item in leituras:
                     tipo = str(item.get("tipo", "")).lower()
                     titulo = str(item.get("titulo", "")).lower()
                     conteudo = formatar_leitura(item)
-
                     if "primeira" in tipo or "1" in tipo or "primeira" in titulo:
                         p_leitura = conteudo
                     elif "segunda" in tipo or "2" in tipo or "segunda" in titulo:
@@ -61,21 +55,15 @@ def buscar_liturgia():
                         salmo = conteudo
                     elif "evangelho" in tipo or "evangelho" in titulo:
                         evangelho = conteudo
-
                 if isinstance(dados, dict):
                     if not p_leitura and "primeiraLeitura" in dados:
-                        p_leitura = formatar_leitura(dados.get("primeiraLeitura")) if isinstance(
-                            dados.get("primeiraLeitura"), dict) else str(dados.get("primeiraLeitura", "")).replace("\n", "<br>")
+                        p_leitura = formatar_leitura(dados.get("primeiraLeitura")) if isinstance(dados.get("primeiraLeitura"), dict) else str(dados.get("primeiraLeitura", "")).replace("\n", "<br>")
                     if not s_leitura and "segundaLeitura" in dados:
-                        s_leitura = formatar_leitura(dados.get("segundaLeitura")) if isinstance(
-                            dados.get("segundaLeitura"), dict) else str(dados.get("segundaLeitura", "")).replace("\n", "<br>")
+                        s_leitura = formatar_leitura(dados.get("segundaLeitura")) if isinstance(dados.get("segundaLeitura"), dict) else str(dados.get("segundaLeitura", "")).replace("\n", "<br>")
                     if not salmo and "salmo" in dados:
-                        salmo = formatar_leitura(dados.get("salmo")) if isinstance(
-                            dados.get("salmo"), dict) else str(dados.get("salmo", "")).replace("\n", "<br>")
+                        salmo = formatar_leitura(dados.get("salmo")) if isinstance(dados.get("salmo"), dict) else str(dados.get("salmo", "")).replace("\n", "<br>")
                     if not evangelho and "evangelho" in dados:
-                        evangelho = formatar_leitura(dados.get("evangelho")) if isinstance(
-                            dados.get("evangelho"), dict) else str(dados.get("evangelho", "")).replace("\n", "<br>")
-
+                        evangelho = formatar_leitura(dados.get("evangelho")) if isinstance(dados.get("evangelho"), dict) else str(dados.get("evangelho", "")).replace("\n", "<br>")
                 if evangelho or salmo or p_leitura:
                     return {
                         "liturgia": dados.get("liturgia") or dados.get("titulo") or "Liturgia do Dia",
@@ -89,7 +77,6 @@ def buscar_liturgia():
                     }
         except Exception:
             continue
-
     return {
         "liturgia": "Liturgia Diária",
         "cor": "Verde",
@@ -101,24 +88,30 @@ def buscar_liturgia():
         "data": datetime.now().strftime("%d/%m/%Y")
     }
 
-
-# ROTA DA PÁGINA INICIAL (index.html)
 @app.route("/")
 def index():
     return render_template("index.html")
 
-
-# ROTA DA PÁGINA DA LITURGIA (liturgia.html)
 @app.route("/liturgia")
 def pagina_liturgia():
     return render_template("liturgia.html")
 
-
-# ROTA API QUE RETORNA OS DADOS EM JSON
 @app.route("/api/liturgia")
 def api_liturgia():
     return jsonify(buscar_liturgia())
 
+# --- ROTAS NOVAS DO MURAL ---
+@app.route("/mural")
+def ver_mural():
+    return render_template("mural.html", recados=recados_mural)
+
+@app.route("/mural", methods=["POST"])
+def postar_mural():
+    nome = request.form.get("nome")
+    mensagem = request.form.get("mensagem")
+    if nome and mensagem:
+        recados_mural.append({"nome": nome, "mensagem": mensagem})
+    return redirect("/mural")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=10000)
