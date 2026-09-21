@@ -1,117 +1,52 @@
-from datetime import datetime
-from flask import Flask, jsonify, render_template, request, redirect
-import requests
+import json, os
+from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
 
-# Lista do mural - guarda os recados
-recados_mural = []
+ARQUIVO_MURAL = "mural.json"
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-    return response
+# AQUI VOCÊS 3 - pode trocar as senhas depois
+USUARIOS = {
+    "padre": "padre123",
+    "elisangela": "elis123",
+    "ana": "teste123" # esse é você, pode colocar seu nome
+}
 
-def formatar_leitura(item):
-    if not isinstance(item, dict):
-        return ""
-    ref = item.get("referencia", "")
-    ref_str = f" <b>({ref})</b>" if ref else ""
-    refrao = item.get("refrao") or ""
-    refrao_str = f"<p class='refrao'><b>Refrão:</b> <i>{refrao}</i></p>" if refrao else ""
-    texto = item.get("texto") or item.get("leitura") or ""
-    if texto:
-        texto_formatado = texto.replace("\n", "<br>")
-        return f"{ref_str}{refrao_str}<div class='texto-leitura'>{texto_formatado}</div>"
-    return ""
+def carregar():
+    if not os.path.exists(ARQUIVO_MURAL):
+        return []
+    with open(ARQUIVO_MURAL, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-def buscar_liturgia():
-    urls = [
-        "https://liturgia.up.railway.app/",
-        "https://liturgia.up.railway.app/v2/",
-        "https://liturgia.up.railway.app/v3/"
-    ]
-    for url in urls:
-        try:
-            r = requests.get(url, timeout=5)
-            if r.status_code == 200:
-                j = r.json()
-                dados = j[0] if isinstance(j, list) and len(j) > 0 else j
-                p_leitura = ""
-                s_leitura = ""
-                salmo = ""
-                evangelho = ""
-                leituras = dados.get("leituras", []) if isinstance(dados, dict) else []
-                for item in leituras:
-                    tipo = str(item.get("tipo", "")).lower()
-                    titulo = str(item.get("titulo", "")).lower()
-                    conteudo = formatar_leitura(item)
-                    if "primeira" in tipo or "1" in tipo or "primeira" in titulo:
-                        p_leitura = conteudo
-                    elif "segunda" in tipo or "2" in tipo or "segunda" in titulo:
-                        s_leitura = conteudo
-                    elif "salmo" in tipo or "salmo" in titulo:
-                        salmo = conteudo
-                    elif "evangelho" in tipo or "evangelho" in titulo:
-                        evangelho = conteudo
-                if isinstance(dados, dict):
-                    if not p_leitura and "primeiraLeitura" in dados:
-                        p_leitura = formatar_leitura(dados.get("primeiraLeitura")) if isinstance(dados.get("primeiraLeitura"), dict) else str(dados.get("primeiraLeitura", "")).replace("\n", "<br>")
-                    if not s_leitura and "segundaLeitura" in dados:
-                        s_leitura = formatar_leitura(dados.get("segundaLeitura")) if isinstance(dados.get("segundaLeitura"), dict) else str(dados.get("segundaLeitura", "")).replace("\n", "<br>")
-                    if not salmo and "salmo" in dados:
-                        salmo = formatar_leitura(dados.get("salmo")) if isinstance(dados.get("salmo"), dict) else str(dados.get("salmo", "")).replace("\n", "<br>")
-                    if not evangelho and "evangelho" in dados:
-                        evangelho = formatar_leitura(dados.get("evangelho")) if isinstance(dados.get("evangelho"), dict) else str(dados.get("evangelho", "")).replace("\n", "<br>")
-                if evangelho or salmo or p_leitura:
-                    return {
-                        "liturgia": dados.get("liturgia") or dados.get("titulo") or "Liturgia do Dia",
-                        "cor": dados.get("cor") or "Verde",
-                        "primeiraLeitura": p_leitura,
-                        "segundaLeitura": s_leitura,
-                        "salmo": salmo,
-                        "evangelho": evangelho,
-                        "link": "https://liturgia.cancaonova.com/",
-                        "data": dados.get("data") or datetime.now().strftime("%d/%m/%Y")
-                    }
-        except Exception:
-            continue
-    return {
-        "liturgia": "Liturgia Diária",
-        "cor": "Verde",
-        "primeiraLeitura": "Acesse o site oficial abaixo para ler as leituras completas de hoje.",
-        "segundaLeitura": "",
-        "salmo": "",
-        "evangelho": "Clique no botão abaixo para ler o Evangelho do dia no portal Canção Nova.",
-        "link": "https://liturgia.cancaonova.com/",
-        "data": datetime.now().strftime("%d/%m/%Y")
-    }
+def salvar(lista):
+    with open(ARQUIVO_MURAL, "w", encoding="utf-8") as f:
+        json.dump(lista, f, ensure_ascii=False, indent=2)
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-@app.route("/liturgia")
-def pagina_liturgia():
-    return render_template("liturgia.html")
-
-@app.route("/api/liturgia")
-def api_liturgia():
-    return jsonify(buscar_liturgia())
-
-# --- ROTAS NOVAS DO MURAL ---
 @app.route("/mural")
-def ver_mural():
-    return render_template("mural.html", recados=recados_mural)
+def mural():
+    mensagens = carregar()
+    return render_template("mural.html", mensagens=mensagens)
 
-@app.route("/mural", methods=["POST"])
-def postar_mural():
-    nome = request.form.get("nome")
-    mensagem = request.form.get("mensagem")
-    if nome and mensagem:
-        recados_mural.append({"nome": nome, "mensagem": mensagem})
+@app.route("/mural/novo", methods=["POST"])
+def novo():
+    login = request.form.get("login").lower().strip()
+    senha = request.form.get("senha")
+
+    # verifica se o login existe e a senha bate
+    if login not in USUARIOS or USUARIOS[login]!= senha:
+        return "Login ou senha errados! Fale com a Ana.", 403
+
+    mensagens = carregar()
+    mensagens.insert(0, {
+        "autor": login,
+        "texto": request.form.get("texto")
+    })
+    salvar(mensagens)
     return redirect("/mural")
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=10000)
+    app.run(debug=True)
