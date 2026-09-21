@@ -16,7 +16,7 @@
 <body>
   <div class="card">
     <!-- O Jinja2 do Flask direciona este link de volta para a rota 'index' -->
-    <a href="{{ url_for('index') }}" class="btn-voltar">← Voltar</a>
+  <button onclick="window.location.href='/'" class="btn-voltar">← Voltar</button>
 
     <h2>Liturgia <span id="dataHoje"></span></h2>
     <div id="conteudoLiturgia">Carregando liturgia...</div>
