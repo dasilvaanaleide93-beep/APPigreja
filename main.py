@@ -1,26 +1,21 @@
-import json, os
+import os, sqlite3
 from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
 
-ARQUIVO_MURAL = "mural.json"
-
-# AQUI VOCÊS 3 - pode trocar as senhas depois
+# SÓ ESSES DOIS PODEM POSTAR
 USUARIOS = {
     "padre": "padre123",
-    "elisangela": "elis123",
-    "ana": "teste123" # esse é você, pode colocar seu nome
+    "elisangela": "elis123"
 }
 
-def carregar():
-    if not os.path.exists(ARQUIVO_MURAL):
-        return []
-    with open(ARQUIVO_MURAL, "r", encoding="utf-8") as f:
-        return json.load(f)
+DB = "/tmp/mural.db"
 
-def salvar(lista):
-    with open(ARQUIVO_MURAL, "w", encoding="utf-8") as f:
-        json.dump(lista, f, ensure_ascii=False, indent=2)
+def init_db():
+    conn = sqlite3.connect(DB)
+    conn.execute("CREATE TABLE IF NOT EXISTS recados (id INTEGER PRIMARY KEY, autor TEXT, texto TEXT)")
+    conn.close()
+init_db()
 
 @app.route("/")
 def index():
@@ -28,25 +23,24 @@ def index():
 
 @app.route("/mural")
 def mural():
-    mensagens = carregar()
-    return render_template("mural.html", mensagens=mensagens)
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+    cur.execute("SELECT autor, texto FROM recados ORDER BY id DESC")
+    msgs = [{"autor": a, "texto": t} for a, t in cur.fetchall()]
+    conn.close()
+    return render_template("mural.html", mensagens=msgs)
 
 @app.route("/mural/novo", methods=["POST"])
 def novo():
-    login = request.form.get("login").lower().strip()
-    senha = request.form.get("senha")
-
-    # verifica se o login existe e a senha bate
+    login = request.form.get("login","").lower().strip()
+    senha = request.form.get("senha","")
     if login not in USUARIOS or USUARIOS[login]!= senha:
-        return "Login ou senha errados! Fale com a Ana.", 403
-
-    mensagens = carregar()
-    mensagens.insert(0, {
-        "autor": login,
-        "texto": request.form.get("texto")
-    })
-    salvar(mensagens)
+        return "Acesso negado! So Padre e Elisangela podem postar.", 403
+    conn = sqlite3.connect(DB)
+    conn.execute("INSERT INTO recados (autor, texto) VALUES (?,?)", (login, request.form.get("texto")))
+    conn.commit()
+    conn.close()
     return redirect("/mural")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=10000)
