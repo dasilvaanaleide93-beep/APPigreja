@@ -1,6 +1,7 @@
 import os, sqlite3
 from flask import Flask, request, redirect
 from flask_cors import CORS
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -13,8 +14,8 @@ def init_db():
     conn.commit(); conn.close()
 init_db()
 
-# IMAGEM DA SANTA - tenta da sua pasta, se não tiver usa da internet
-IMG_SANTA = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Sainte_Th%C3%A9r%C3%A8se_de_l%27Enfant_J%C3%A9sus.jpg/400px-Sainte_Th%C3%A9r%C3%A8se_de_l%27Enfant_J%C3%A9sus.jpg"
+# FOTO FIXA QUE NÃO QUEBRA NUNCA
+IMG_SANTA = "https://upload.wikimedia.org/wikipedia/commons/5/5a/Sainte_Th%C3%A9r%C3%A8se_de_l%27Enfant_J%C3%A9sus.jpg"
 
 @app.route('/')
 def home():
@@ -22,14 +23,14 @@ def home():
     <html><head><meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body{{font-family:Arial;margin:0;background:#fff8f0;text-align:center}}
-       .banner{{background:linear-gradient(#ff9a5c,#ff6a2d);padding:30px 20px;color:white}}
-       .banner img{{width:160px;height:160px;border-radius:50%;border:5px solid white;object-fit:cover;background:white}}
-       .menu{{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:20px;max-width:500px;margin:auto}}
-       .btn{{background:white;padding:22px 10px;border-radius:18px;text-decoration:none;color:#333;font-size:19px;font-weight:bold;box-shadow:0 3px 10px #0002;display:block}}
-       .btn span{{font-size:42px;display:block;margin-bottom:5px}}
+      .banner{{background:linear-gradient(#ff9a5c,#ff6a2d);padding:30px 20px;color:white}}
+      .banner img{{width:160px;height:160px;border-radius:50%;border:5px solid white;object-fit:cover;background:white}}
+      .menu{{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:20px;max-width:500px;margin:auto}}
+      .btn{{background:white;padding:22px 10px;border-radius:18px;text-decoration:none;color:#333;font-size:19px;font-weight:bold;box-shadow:0 3px 10px #0002;display:block}}
+      .btn span{{font-size:42px;display:block;margin-bottom:5px}}
     </style></head><body>
         <div class="banner">
-            <img src="{IMG_SANTA}" onerror="this.src='https://i.ibb.co/3m2cP3Y/santa.jpg'">
+            <img src="{IMG_SANTA}">
             <h1 style="margin:15px 0 5px">Santa Teresinha</h1>
             <p style="margin:0;opacity:0.9">Paróquia Santa Teresinha - App da Igreja</p>
         </div>
@@ -56,15 +57,73 @@ def mural():
 
 @app.route('/oracoes')
 def oracoes():
-    return '<html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:Arial;padding:20px;max-width:600px;margin:auto"><a href="/">⬅️ Voltar</a><h1>📖 Orações</h1><div style="background:white;padding:20px;border-radius:12px;font-size:22px;line-height:1.6"><h3>Oração a Santa Teresinha</h3><p>Ó Santa Teresinha, que prometestes fazer cair uma chuva de rosas, olhai para nossas necessidades e intercedei por nós.<br><br>Amém.</p></div></body></html>'
+    return '''
+    <html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body style="font-family:Arial;padding:15px;max-width:650px;margin:auto;background:#fff8f0">
+    <a href="/" style="font-size:20px;text-decoration:none">⬅️ Voltar</a>
+    <h1 style="text-align:center">📖 Orações</h1>
+
+    <div style="background:white;padding:20px;border-radius:15px;margin-bottom:15px;box-shadow:0 2px 8px #0001">
+    <h3 style="color:#ff6a2d">Oração a Santa Teresinha</h3>
+    <p style="font-size:20px;line-height:1.6">
+    Ó Santa Teresinha do Menino Jesus, que prometestes fazer cair do céu uma chuva de rosas,<br><br>
+    Olhai para nossas necessidades e intercedei por nós junto a Deus.<br><br>
+    Ajudai-nos a seguir vosso caminho de amor e simplicidade.<br><br>
+    Amém.
+    </p>
+    </div>
+
+    <div style="background:white;padding:20px;border-radius:15px;margin-bottom:15px;box-shadow:0 2px 8px #0001">
+    <h3 style="color:#ff6a2d">Pai Nosso</h3>
+    <p style="font-size:20px;line-height:1.6">Pai nosso que estais nos céus, santificado seja o vosso nome...</p>
+    </div>
+
+    <div style="background:white;padding:20px;border-radius:15px;box-shadow:0 2px 8px #0001">
+    <h3 style="color:#ff6a2d">Ave Maria</h3>
+    <p style="font-size:20px;line-height:1.6">Ave Maria, cheia de graça, o Senhor é convosco...</p>
+    </div>
+
+    </body></html>
+    '''
 
 @app.route('/doacoes')
 def doacoes():
-    return '<html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:Arial;padding:20px;max-width:600px;margin:auto"><a href="/">⬅️ Voltar</a><h1>❤️ Doações</h1><div style="background:white;padding:20px;border-radius:12px;font-size:22px"><p>Ajude nossa paróquia!</p><p><b>PIX:</b> (coloque seu PIX aqui)<br><br>Que Deus abençoe sua generosidade!</p></div></body></html>'
+    return '<html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:Arial;padding:20px;max-width:600px;margin:auto;background:#fff8f0"><a href="/">⬅️ Voltar</a><h1>❤️ Doações</h1><div style="background:white;padding:20px;border-radius:12px;font-size:22px"><p>Ajude nossa paróquia!</p><p><b>PIX:</b> (coloque seu PIX aqui)<br><br>Que Deus abençoe!</p></div></body></html>'
 
 @app.route('/liturgia')
 def liturgia():
-    return '<html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:Arial;padding:20px;max-width:600px;margin:auto"><a href="/">⬅️ Voltar</a><h1>✝️ Liturgia Diária</h1><div style="background:white;padding:20px;border-radius:12px;font-size:22px"><p><b>Evangelho de Hoje</b></p><p>Confira a liturgia completa em: <a href="https://liturgiadiaria.cnbb.org.br" target="_blank">liturgiadiaria.cnbb.org.br</a></p><p style="margin-top:20px;font-style:italic">"Deixai vir a mim as criancinhas, pois delas é o Reino dos Céus"</p></div></body></html>'
+    data_hoje = datetime.now().strftime("%d/%m/%Y - %A")
+    return f'''
+    <html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body style="font-family:Arial;padding:15px;max-width:650px;margin:auto;background:#fff8f0">
+    <a href="/" style="font-size:20px;text-decoration:none">⬅️ Voltar</a>
+    <h1 style="text-align:center">✝️ Liturgia Diária</h1>
+    <p style="text-align:center;background:#ff6a2d;color:white;padding:10px;border-radius:10px;font-size:18px"><b>{data_hoje}</b></p>
+
+    <div style="background:white;padding:20px;border-radius:15px;margin-bottom:15px;box-shadow:0 2px 8px #0001">
+    <h3 style="color:#ff6a2d">📖 1ª Leitura</h3>
+    <p style="font-size:19px;line-height:1.6">Leitura completa de hoje você confere atualizada em:<br>
+    <a href="https://liturgiadiaria.cnbb.org.br" target="_blank" style="font-size:20px;color:#ff6a2d;font-weight:bold">liturgiadiaria.cnbb.org.br</a></p>
+    </div>
+
+    <div style="background:white;padding:20px;border-radius:15px;margin-bottom:15px;box-shadow:0 2px 8px #0001">
+    <h3 style="color:#ff6a2d">🎵 Salmo Responsorial</h3>
+    <p style="font-size:19px;line-height:1.6;font-style:italic">"O Senhor é meu pastor, nada me faltará."</p>
+    <p style="font-size:17px">Salmo 22</p>
+    </div>
+
+    <div style="background:white;padding:20px;border-radius:15px;margin-bottom:15px;box-shadow:0 2px 8px #0001">
+    <h3 style="color:#ff6a2d">✝️ Evangelho de Hoje</h3>
+    <p style="font-size:19px;line-height:1.6"><i>"Deixai vir a mim as criancinhas, pois delas é o Reino dos Céus"</i><br><br>
+    Evangelho completo no link da CNBB acima.</p>
+    </div>
+
+    <div style="text-align:center;margin-top:20px">
+    <a href="https://liturgiadiaria.cnbb.org.br" target="_blank" style="background:#ff6a2d;color:white;padding:15px 25px;border-radius:12px;text-decoration:none;font-size:20px;font-weight:bold;display:inline-block">Ver Liturgia Completa no site da CNBB</a>
+    </div>
+
+    </body></html>
+    '''
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
